@@ -8,7 +8,8 @@ import numpy as np
 def plot_basic_results():# Plotting basic results
     graph_names = ["C2","G3","G6"]
     measures = ["ari", "projector_distance", "time"]
-    techniques = ["template_adj", "template_lap", "spectral", "modularity"]
+    #techniques = ["template_adj", "template_lap", "spectral", "modularity"]
+    techniques = ["template_adj", "spectral", "modularity"]
     cluster_sizes = ["5","10","20","40","80"]
 
     with open("basic_results.json") as fp:
@@ -35,7 +36,7 @@ def plot_basic_results():# Plotting basic results
                 if technique == "modularity" and measure == "projector_distance":
                     continue
                 # Setting up printables name
-                if technique == "template_adj": technique_printable = "Adjacency TB" ; color = (0.6,0,0) ; marker = "^" ; variation = -0.15
+                if technique == "template_adj": technique_printable = "Template-based" ; color = (0.6,0,0) ; marker = "^" ; variation = -0.15
                 if technique == "template_lap": technique_printable = "Laplacian TB" ; color = (1.0,0.5,0.1) ; marker = "v" ; variation = -0.05
                 if technique == "spectral": technique_printable = "Spectral" ; color = "g" ; marker = "o" ; variation = 0.05
                 if technique == "modularity": technique_printable = "Modularity" ; color = "b" ; marker = "D" ; variation = 0.15
@@ -62,7 +63,8 @@ def plot_progression_results():
     intra_cluster_probabilities = ["80.0", "75.0", "70.0", "65.0", "60.0", "55.0", "50.0", "45.0", "40.0"][::-1]
     inter_cluster_probabilities_print = ["20%", "25%", "30%", "35%", "40%", "45%", "50%", "55%", "60%"][::-1]
     measures = ["ari", "projector_distance", "time"]
-    techniques = ["template_adj", "template_lap", "spectral", "modularity"]
+    #techniques = ["template_adj", "template_lap", "spectral", "modularity"]
+    techniques = ["template_adj", "spectral", "modularity"]
     cluster_sizes = ["10","20","40"]
 
     with open("progression_results.json") as fp:
@@ -84,7 +86,7 @@ def plot_progression_results():
                 if technique == "modularity" and measure == "projector_distance":
                     continue
                 # Setting up printables name
-                if technique == "template_adj": technique_printable = "Adjacency TB"; color = (0.6, 0, 0); marker = "^"; variation = -0.15
+                if technique == "template_adj": technique_printable = "Template-based"; color = (0.6, 0, 0); marker = "^"; variation = -0.15
                 if technique == "template_lap": technique_printable = "Laplacian TB"; color = (1.0, 0.5, 0.1); marker = "v"; variation = -0.05
                 if technique == "spectral": technique_printable = "Spectral"; color = "g"; marker = "o"; variation = 0.05
                 if technique == "modularity": technique_printable = "Modularity"; color = "b"; marker = "D"; variation = 0.15
@@ -111,7 +113,8 @@ def plot_bp_results():
     inter_cluster_probabilities = ["80", "75", "70", "65", "60", "55", "50", "45", "40"]
     inter_cluster_probabilities_print = ["80%", "75%", "70%", "65%", "60%", "55%", "50%", "45%", "40%"]
     measures = ["ari", "projector_distance", "time"]
-    techniques = ["template_adj", "template_lap", "spectral", "modularity"]
+    #techniques = ["template_adj", "template_lap", "spectral", "modularity"]
+    techniques = ["template_adj", "spectral", "modularity"]
     cluster_sizes = ["10","20","40"]
     graphs = ["HUB", "BIPARTITE"]
 
@@ -138,7 +141,7 @@ def plot_bp_results():
                     if technique == "modularity" and measure == "projector_distance":
                         continue
                     # Setting up printables name
-                    if technique == "template_adj": technique_printable = "Adjacency TB"; color = (0.6, 0, 0); marker = "^"; variation = -0.15
+                    if technique == "template_adj": technique_printable = "Template-based"; color = (0.6, 0, 0); marker = "^"; variation = -0.15
                     if technique == "template_lap": technique_printable = "Laplacian TB"; color = (1.0, 0.5, 0.1); marker = "v"; variation = -0.05
                     if technique == "spectral": technique_printable = "Spectral"; color = "g"; marker = "o"; variation = 0.05
                     if technique == "modularity": technique_printable = "Modularity"; color = "b"; marker = "D"; variation = 0.15
@@ -162,13 +165,13 @@ def plot_bp_results():
                 plt.savefig("bipartite_{}_{}_{}.eps".format(graph_name, cluster_size, measure))
 
 
-if __name__ == '__main__':
+def print_real():
     measures = ["ari", "projector_distance", "time"]
     techniques = ["template_adj", "template_lap", "spectral", "modularity"]
-    technique_printables = ["Adjacency TB", "Laplacian TB", "Spectral", "Modularity"]
-    graphs = ["email", "DBPL"]
+    technique_printables = ["Template-based", "Laplacian TB", "Spectral", "Modularity"]
+    graphs = ["DBPL"]
 
-    with open("real_results.json") as fp:
+    with open("real_results_custom2.json") as fp:
         results_dict = json.load(fp)
 
     # REAL TABLE SCHEMA: header is dataset, metric, each technique; multi line for datasets
@@ -190,3 +193,8 @@ if __name__ == '__main__':
                 measure_list = results_dict[graph][technique][measure]
                 print(" & ${:.04f} \\pm {:.04f}$".format(np.mean(measure_list), np.std(measure_list)), end="")
             print("\\\\")
+
+if __name__ == '__main__':
+    plot_basic_results()
+    plot_bp_results()
+    plot_progression_results()
