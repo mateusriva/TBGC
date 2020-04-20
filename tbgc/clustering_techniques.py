@@ -48,6 +48,22 @@ def compute_matching_norm(M, O, P):
     return np.linalg.norm(sub, 'fro')
 
 
+def compute_gradient_norm(M, O, P):
+    """Returns the gradient w.r.t. P of the norm."""
+    # Sanity checking: conversions to ndarray
+    M, O, P = np.array(M), np.array(O), np.array(P)
+
+    PM = np.matmul(P, M)
+    OPM = np.matmul(O, PM)
+    OP = np.matmul(O, P)
+    PTOP = np.matmul(P.T, OP)
+    PPTOP = np.matmul(P, PTOP)
+    OPPTOP = np.matmul(O, PPTOP)
+    sub = np.subtract(OPPTOP, OPM)
+    scaled = sub * 4
+    return scaled
+
+
 def find_optimal_P(M, O, manifold_P, cost=compute_matching_norm, verbosity=0):
   """Find the optimal P in a given manifold for a given model and observation.
   Takes as argument a cost function with signature (M,O,P)"""
@@ -59,6 +75,61 @@ def find_optimal_P(M, O, manifold_P, cost=compute_matching_norm, verbosity=0):
   matching_problem = Problem(manifold=manifold_P, cost=parametrized_cost, verbosity=verbosity)
   matching_solver = SteepestDescent(maxiter=100000)
   return matching_solver.solve(matching_problem)
+
+
+def normalization_P(P_prime):
+    """Projects a non-negative P_prime back to non-negative right-stochastic-like space by normalising each line."""
+    return P_prime / np.sum(P_prime, axis=0)
+
+
+def projection_P(P_prime):
+    """Projects $P'$ back into non-negative right-stochastic-like space, line per line, using matrix operations"""
+    sorted_prime = -np.sort(-P_prime, axis=1)  # Descending order sort
+    cumsum_sorted = np.cumsum(sorted_prime, axis=1)  # Compute cumulative sum of lines
+    rho_availability = sorted_prime > (cumsum_sorted - 1) / np.arange(1, P_prime.shape[
+        1] + 1)  # Compute non-zero rho candidates
+    rho = np.count_nonzero(rho_availability, axis=1)  # Compute number of non-zero values in final line (rho)
+    theta = (cumsum_sorted[np.arange(len(rho)), rho - 1] - 1) / (rho)  # Compute lagrange multiplier theta
+    P = (P_prime.transpose() - theta).transpose().clip(min=0)  # subtract multiplier, clip negatives
+
+    return P
+
+
+def find_optimal_P_stochastic(M, O, cost=compute_matching_norm, gradient=compute_gradient_norm, learning_rate=0.0001):
+    """Find the optimal P in a given manifold for a given model and observation.
+    Takes as argument cost and gradient functions with signatures (M,O,P)"""
+    # Getting n and k values
+    n, k = O.shape[0], M.shape[0]
+
+    # Random initialization of P w/ normalization
+    P = normalization_P(np.random.rand(n, k))
+
+    # Stopping criteria
+    max_epochs = 1000
+    min_step_size = 10e-10
+
+    # Iterative update loop
+    last_cost = cost(M, O, P)
+    best_cost = last_cost
+    for epoch in range(max_epochs):  # trange = tqdm progress bar
+        # Update P
+        nabla = gradient(M, O, P)
+        P_prime = P - learning_rate * nabla
+        P = projection_P(P_prime)
+
+        # Compute cost, update, check convergence
+        current_cost = cost(M, O, P)
+        if current_cost < best_cost:
+            best_cost = current_cost
+        step_size = last_cost - current_cost
+        last_cost = current_cost
+        if min_step_size >= step_size >= 0:
+            # print("Minimal step size reached at {} epochs".format(epoch))
+            break
+
+    # if epoch == max_epochs - 1:
+        # print("Max epochs reached")
+    return P
 
 
 def get_kmeans(P, k, verbosity=0):
@@ -862,7 +933,7 @@ def cluster_spectral(A_M, A_O):
 
 
 def cluster_template(A_M, A_O, mode="adjacency", cost_function=compute_matching_norm):
-    """Performs baseline spectral clustering.
+    """Performs Template-based graph clustering.
     Parameters
     ---------
     A_M : `ndarray`
@@ -896,6 +967,29 @@ def cluster_template(A_M, A_O, mode="adjacency", cost_function=compute_matching_
     template_time = time() - template_start_time
 
     return template_prediction, P_opt_template, template_time
+
+
+def cluster_stochastic(A_M, A_O, learning_rate=10e-5):
+    """Performs stochastic template-based spectral clustering.
+    Parameters
+    ---------
+    A_M : `ndarray`
+        Adjacency matrix of model
+    A_O : `ndarray
+        Adjacency matrix of observation
+    learning_rate : float
+        Gradient descent learning rate
+    Returns
+    -------
+      prediction
+      P
+      time"""
+    stochastic_start_time = time()
+    P_opt_stochastic = find_optimal_P_stochastic(A_M, A_O, learning_rate=learning_rate)
+    stochastic_prediction = np.argmax(P_opt_stochastic, axis=1)
+    stochastic_time = time() - stochastic_start_time
+
+    return stochastic_prediction, P_opt_stochastic, stochastic_time
 
 
 def cluster_modularity(A_M, A_O):
