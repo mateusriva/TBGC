@@ -9,7 +9,7 @@ from typing import Callable, Sequence
 import numpy as np
 from sklearn.metrics import adjusted_rand_score
 
-from clustering_techniques import cluster_template, cluster_spectral, cluster_modularity
+from clustering_techniques import cluster_template, cluster_spectral, cluster_modularity, cluster_stochastic
 from clustering_techniques import compute_matching_norm
 
 
@@ -55,19 +55,21 @@ def run_iteration(generator_function: Callable, generator_args: Sequence, cost_f
     # Run techniques
     template_adj_prediction, P_opt_template_adj, template_adj_time = \
         cluster_template(A_M, A_O, mode="adjacency", cost_function=cost_function)
-    template_lap_prediction, P_opt_template_lap, template_lap_time = \
-        cluster_template(A_M, A_O, mode="laplacian", cost_function=cost_function)
+    # template_lap_prediction, P_opt_template_lap, template_lap_time = \
+    #    cluster_template(A_M, A_O, mode="laplacian", cost_function=cost_function)
+    template_sto_prediction, P_opt_template_sto, template_sto_time = \
+        cluster_stochastic(A_M, A_O, learning_rate=10e-5)
     spectral_prediction, P_opt_spectral, spectral_time = \
         cluster_spectral(A_M, A_O)
     modularity_prediction, _, modularity_time = \
         cluster_modularity(A_M, A_O)
 
     # Compute measures
-    measures = {"template_adj": {}, "template_lap": {}, "spectral": {}, "modularity": {}}
-    for method, prediction, features, times in zip(["template_adj", "template_lap", "spectral", "modularity"],
-                                                   [template_adj_prediction, template_lap_prediction,  spectral_prediction, modularity_prediction],
-                                                   [P_opt_template_adj, P_opt_template_lap, P_opt_spectral, None],
-                                                   [template_adj_time, template_lap_time, spectral_time, modularity_time]):
+    measures = {"template_adj": {}, "template_lap": {}, "template_sto": {}, "spectral": {}, "modularity": {}}
+    for method, prediction, features, times in zip(["template_adj", "template_sto", "spectral", "modularity"],
+                                                   [template_adj_prediction, template_sto_prediction,  spectral_prediction, modularity_prediction],
+                                                   [P_opt_template_adj, P_opt_template_sto, P_opt_spectral, None],
+                                                   [template_adj_time, template_sto_time, spectral_time, modularity_time]):
         # Adjusted Rand Index
         measures[method]["ari"] = adjusted_rand_score(vertex_labels, prediction)
         # Distance to gt projector

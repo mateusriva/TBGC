@@ -28,6 +28,7 @@ if __name__ == '__main__':
 
             experiment_measures = {"template_adj": {"ari": [], "projector_distance": [], "time": []},
                                    "template_lap": {"ari": [], "projector_distance": [], "time": []},
+                                   "template_sto": {"ari": [], "projector_distance": [], "time": []},
                                    "spectral": {"ari": [], "projector_distance": [], "time": []},
                                    "modularity": {"ari": [], "projector_distance": [], "time": []}}
 
@@ -37,7 +38,7 @@ if __name__ == '__main__':
                 #    iteration_measures = run_iteration(graph_function, (c,), random_state=iteration)
 
                 for iteration_measures in iteration_measures_list:
-                    for method in ["template_adj", "template_lap", "spectral", "modularity"]:
+                    for method in ["template_adj", "template_sto", "spectral", "modularity"]:
                         for measure in ["ari", "projector_distance", "time"]:
                             experiment_measures[method][measure].append(iteration_measures[method][measure])
 
