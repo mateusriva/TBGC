@@ -29,7 +29,8 @@ def plot_basic_results():# Plotting basic results
             if measure == "time": measure_print = "Time"
 
             # Starting plot
-            plt.figure()
+            plt.figure(figsize=(10,4))
+            plt.rcParams.update({'font.size': 18})
             plt.title(graph_print_name)
             for technique in techniques:
                 # Skipping modularity and PD
@@ -61,7 +62,7 @@ def plot_basic_results():# Plotting basic results
 def plot_progression_results():
 
     intra_cluster_probabilities = ["80.0", "75.0", "70.0", "65.0", "60.0", "55.0", "50.0", "45.0", "40.0"][::-1]
-    inter_cluster_probabilities_print = ["20%", "25%", "30%", "35%", "40%", "45%", "50%", "55%", "60%"][::-1]
+    inter_cluster_probabilities_print = ["0.20", "0.25", "0.30", "0.35", "0.40", "0.45", "0.50", "0.55", "0.60"][::-1]
     measures = ["ari", "projector_distance", "time"]
     #techniques = ["template_adj", "template_lap", "spectral", "modularity"]
     techniques = ["template_adj", "spectral", "modularity"]
@@ -79,7 +80,8 @@ def plot_progression_results():
             if measure == "time": measure_print = "Time"
 
             # Starting plot
-            plt.figure()
+            plt.figure(figsize=(10,4))
+            plt.rcParams.update({'font.size': 18})
             plt.title("Cluster size {}".format(cluster_size))
             for technique in techniques:
                 # Skipping modularity and PD
@@ -111,7 +113,7 @@ def plot_progression_results():
 
 def plot_bp_results():
     inter_cluster_probabilities = ["80", "75", "70", "65", "60", "55", "50", "45", "40"]
-    inter_cluster_probabilities_print = ["80%", "75%", "70%", "65%", "60%", "55%", "50%", "45%", "40%"]
+    inter_cluster_probabilities_print = ["0.80", "0.75", "0.70", "0.65", "0.60", "0.55", "0.50", "0.45", "0.40"]
     measures = ["ari", "projector_distance", "time"]
     #techniques = ["template_adj", "template_lap", "spectral", "modularity"]
     techniques = ["template_adj", "spectral", "modularity"]
@@ -124,8 +126,8 @@ def plot_bp_results():
     # PROGRESSION PLOT SCHEMA: one plot per graph/cluster size/measure, x-axis is interprob, lines are techniques
     for graph_name in graphs:
         # printables
-        if graph_name == "HUB": graph_name_print = "Hub (50% ICP)"
-        if graph_name == "BIPARTITE": graph_name_print = "Bipartite (0% ICP)"
+        if graph_name == "HUB": graph_name_print = "Hub (0.5 ICP)"
+        if graph_name == "BIPARTITE": graph_name_print = "Bipartite (0.0 ICP)"
         for cluster_size in cluster_sizes:
             for measure in measures:
                 # Setting up printables name
@@ -134,7 +136,8 @@ def plot_bp_results():
                 if measure == "time": measure_print = "Time"
 
                 # Starting plot
-                plt.figure()
+                plt.figure(figsize=(10,4))
+                plt.rcParams.update({'font.size': 18})
                 plt.title("{}, cluster size {}".format(graph_name_print, cluster_size))
                 for technique in techniques:
                     # Skipping modularity and PD
@@ -194,7 +197,88 @@ def print_real():
                 print(" & ${:.04f} \\pm {:.04f}$".format(np.mean(measure_list), np.std(measure_list)), end="")
             print("\\\\")
 
+def plot_real_noisy():
+    measures = ["ari", "projector_distance"]
+    techniques = ["template_adj"]
+    technique_printables = ["Template-based"]
+    graphs = ["email"]
+    noises=["0","1","2","5","10","20","30"]
+
+    with open("real_results_noisy.json") as fp:
+        results_dict = json.load(fp)
+
+    # NOISY PLOT SCHEMA: x-axis is noise level. need horizontal lines for baselines!
+        # ARI
+        plt.figure(figsize=(10, 4))
+        plt.rcParams.update({'font.size': 18})
+        plt.title("ARI - Noisy Model")
+
+        # Plotting baseline spectral line
+        spectral_mean = np.mean([results_dict["email"][noise]["spectral"]["ari"] for noise in noises])
+        spectral_std = np.std([results_dict["email"][noise]["spectral"]["ari"] for noise in noises])
+        plt.hlines(spectral_mean, xmin=0, xmax=len(noises) - 1, color="g", linestyle="--", label="Spectral")
+        # plt.fill_between(range(len(noises)), [spectral_mean + spectral_std] * len(noises),
+        #                 [spectral_mean - spectral_std] * len(noises), color=(0, 1, 0, 0.3))
+        # Plotting baseline modularity line
+        modularity_mean = np.mean([results_dict["email"][noise]["modularity"]["ari"] for noise in noises])
+        modularity_std = np.std([results_dict["email"][noise]["modularity"]["ari"] for noise in noises])
+        plt.hlines(modularity_mean, xmin=0, xmax=len(noises) - 1, color="b", label="Modularity", linestyle="--")
+        # plt.fill_between(range(len(noises)), [modularity_mean+modularity_std]*len(noises), [modularity_mean-modularity_std]*len(noises), color=(0,1,0,0.3))
+
+        # Plotting the ARI
+        measure_list = [results_dict["email"][noise]["template_adj"]["ari"] for noise in noises]
+        plt.errorbar(x=np.array(range(len(noises))),
+                     y=np.mean(measure_list, axis=1),
+                     yerr=np.std(measure_list, axis=1),
+                     markersize=6, marker="^", color=(0.6, 0, 0), capsize=2,
+                     label="Template-Based")
+
+        plt.ylabel("ARI")
+        plt.xlabel("Model Noise $\\sigma$")
+        plt.legend()
+        plt.xticks(range(len(noises)), labels=noises)
+
+        plt.grid(b=True, axis="both", which="major")
+
+        plt.tight_layout()
+        plt.savefig("noisy_ari.eps")
+        # Projector Distance
+        plt.figure(figsize=(10, 4))
+        plt.rcParams.update({'font.size': 18})
+        plt.title("Projector Distance - Noisy Model")
+
+        # Plotting baseline spectral line
+        spectral_mean = np.mean([results_dict["email"][noise]["spectral"]["projector_distance"] for noise in noises])
+        spectral_std = np.std([results_dict["email"][noise]["spectral"]["projector_distance"] for noise in noises])
+        plt.hlines(spectral_mean, xmin=0, xmax=len(noises) - 1, color="g", linestyle="--", label="Spectral")
+        # plt.fill_between(range(len(noises)), [spectral_mean + spectral_std] * len(noises),
+        #                 [spectral_mean - spectral_std] * len(noises), color=(0, 1, 0, 0.3))
+        # Plotting baseline modularity line
+        #modularity_mean = np.mean([results_dict["email"][noise]["modularity"]["projector_distance"] for noise in noises])
+        #modularity_std = np.std([results_dict["email"][noise]["modularity"]["projector_distance"] for noise in noises])
+        #plt.hlines(modularity_mean, xmin=0, xmax=len(noises) - 1, color="b", label="Modularity")
+        # plt.fill_between(range(len(noises)), [modularity_mean+modularity_std]*len(noises), [modularity_mean-modularity_std]*len(noises), color=(0,1,0,0.3))
+
+        # Plotting the Projector Distance
+        measure_list = [results_dict["email"][noise]["template_adj"]["projector_distance"] for noise in noises]
+        plt.errorbar(x=np.array(range(len(noises))),
+                     y=np.mean(measure_list, axis=1),
+                     yerr=np.std(measure_list, axis=1),
+                     markersize=6, marker="^", color=(0.6, 0, 0), capsize=2,
+                     label="Template-Based")
+
+        plt.ylabel("Projector Distance")
+        plt.xlabel("Model Noise $\\sigma$")
+        plt.legend()
+        plt.xticks(range(len(noises)), labels=noises)
+
+        plt.grid(b=True, axis="both", which="major")
+
+        plt.tight_layout()
+        plt.savefig("noisy_pd.eps")
+
 if __name__ == '__main__':
-    plot_basic_results()
+    #plot_basic_results()
     plot_bp_results()
     plot_progression_results()
+    #plot_real_noisy()
