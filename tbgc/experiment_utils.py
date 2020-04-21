@@ -82,3 +82,67 @@ def run_iteration(generator_function: Callable, generator_args: Sequence, cost_f
         measures[method]["time"] = times
 
     return measures
+
+
+def run_parametrised_stochastic_iteration(generator_function: Callable, generator_args: Sequence, cost_function:
+Callable = compute_matching_norm, learning_rates: Sequence = [0.00001], random_state = None) -> dict:
+    """Generates a graph using the specified function and arguments, realizes stochastic clusters and compute metrics.
+
+    Parameters
+    ----------
+    generator_function : Callable
+        Function for generating a graph. This function should return at least a 7-tuple with elements 1 being $A_M$, 4
+        being $A_O$ and 6 being the ground truth labels of vertices.
+    generator_args : Sequence
+        Arguments for the generator function. For the included toy datasets, these are `c, intra_cluster_prob,
+        inter_cluster_prob`.
+    cost_function : Callable
+        The cost function that the TBGC technique will optimize. Used for testing alternative cost functions.
+    learning_rates : Sequence
+        Sequence of learning rates to explore.
+
+    Returns
+    -------
+    measures : dict
+        Dictionary containing each technique's measures, organized as `[technique_name][measure]`.
+    """
+    # Initializing random state if specified
+    if random_state is not None:
+        np.random.seed(random_state)
+
+    # Generate graph
+    G_M, A_M, L_M, G_O, A_O, L_O, vertex_labels = generator_function(*generator_args)
+    # Computing ground-truth P from vertex labels
+    k, n = A_M.shape[0], A_O.shape[0]  # Getting cluster size (amount of vertices in model) and observation size
+    P_gt = np.zeros((n, k))
+    P_gt[np.arange(n), vertex_labels] = 1
+    P_gt = P_gt @ np.diag(1/np.sqrt(np.diag(P_gt.T@P_gt)))
+    #spectral 18.576468690032076
+
+    # Run techniques
+    template_sto_predictions, P_opts_template_sto, template_sto_times = [],[],[]
+    for lr in learning_rates:
+        template_sto_prediction, P_opt_template_sto, template_sto_time = \
+            cluster_stochastic(A_M, A_O, learning_rate=lr)
+        template_sto_predictions.append(template_sto_prediction)
+        P_opts_template_sto.append(P_opt_template_sto)
+        template_sto_times.append(template_sto_time)
+
+    # Compute measures
+    measures = {"template_sto_{}".format(lr): {} for lr in learning_rates}
+    for method, prediction, features, times in zip(["template_sto_{}".format(lr) for lr in learning_rates],
+                                                   template_sto_predictions,
+                                                   P_opts_template_sto,
+                                                   template_sto_times):
+        # Adjusted Rand Index
+        measures[method]["ari"] = adjusted_rand_score(vertex_labels, prediction)
+        # Distance to gt projector
+        if method != "modularity":
+            measures[method]["projector_distance"] = np.linalg.norm(
+                np.matmul(P_gt, P_gt.T) - np.matmul(features, features.T))
+        else:
+            measures[method]["projector_distance"] = "N/A"
+        # Computational time
+        measures[method]["time"] = times
+
+    return measures

@@ -105,7 +105,7 @@ def find_optimal_P_stochastic(M, O, cost=compute_matching_norm, gradient=compute
     P = normalization_P(np.random.rand(n, k))
 
     # Stopping criteria
-    max_epochs = 1000
+    max_epochs = 100000
     min_step_size = 10e-10
 
     # Iterative update loop
