@@ -16,7 +16,7 @@ def pooled_iteration_function(iteration):
 if __name__ == '__main__':
     # Experiment parameters
     graphs = list(zip(["C2", "G3", "G6"], [generate_C2, generate_G3, generate_G6]))
-    cluster_sizes = [5, 10, 20, 40, 80]
+    cluster_sizes = [5, 10, 20, 40]
     learning_rates = [1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8,1e-9,1e-10]
     range_of_iterations = range(100)
 
@@ -30,7 +30,7 @@ if __name__ == '__main__':
             experiment_measures = {"template_sto_{}".format(lr): {"ari": [], "projector_distance": [], "time": []}
                                    for lr in learning_rates}
 
-            with Pool(8) as pool:
+            with Pool(20) as pool:
                 iteration_measures_list = list(tqdm(pool.imap(pooled_iteration_function, range_of_iterations), total=len(range_of_iterations)))
                 #for iteration in tqdm(range_of_iterations):
                 #    iteration_measures = run_iteration(graph_function, (c,), random_state=iteration)

@@ -11,11 +11,11 @@ from real_datasets import load_email_dataset, load_dbpl_dataset, load_custom_dbp
 
 def pooled_iteration_function(iteration):
     """Used for the multiprocessing Pool of run_iterations."""
-    return run_iteration(graph_function, (10000, noise), random_state=iteration)
+    return run_iteration(graph_function, (None, noise), random_state=iteration)
 
 if __name__ == '__main__':
     # Experiment parameters
-    graphs = list(zip(["email"], [load_email_dataset], [0,1,2,5,10,20,30]))
+    graphs = list(zip(["email"]*7, [load_email_dataset]*7, [0,1,2,5,10,20,30]))
     range_of_iterations = range(40)
 
     # Experiment results dict
