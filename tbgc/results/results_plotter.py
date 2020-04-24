@@ -1,7 +1,9 @@
 """Plots JSON results file from the TBGC experiments."""
 import json
 
+from math import log10
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 
 
@@ -58,6 +60,64 @@ def plot_basic_results():# Plotting basic results
 
             plt.tight_layout()
             plt.savefig("basic_{}_{}.eps".format(graph_name, measure))
+
+
+def plot_alpha_results():# Plotting alpha results
+    graph_names = ["C2","G3","G6"]
+    measures = ["ari", "projector_distance", "time"]
+    learning_rates = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10]
+    cluster_sizes = ["5","10","20","40"]
+
+    with open("alpha_results.json") as fp:
+        results_dict = json.load(fp)
+
+    # BASIC PLOT SCHEMA: one plot per measure and graph type, x-axis is cluster size, lines are techniques
+    for graph_name in graph_names:
+        # Setting up printables name
+        if graph_name == "G3": graph_print_name = "$G_3$"
+        if graph_name == "G6": graph_print_name = "$G_6$"
+        if graph_name == "C2": graph_print_name = "$C2$"
+
+        for measure in measures:
+            # Setting up printables name
+            if measure == "ari": measure_print = "ARI"
+            if measure == "projector_distance": measure_print = "Projector Distance"
+            if measure == "time": measure_print = "Time"
+
+            # Starting plot
+            plt.figure(figsize=(10,8))
+            plt.rcParams.update({'font.size': 18})
+            plt.title("Stochastic TBGC on {}".format(graph_print_name))
+            cm = plt.get_cmap("jet")
+            for idx, lr in enumerate(learning_rates):
+                technique = "template_sto_{}".format(lr)
+                # Setting up printables name
+                technique_printable = "$\\alpha = {}$".format(lr)
+                color = cm(idx/(len(learning_rates)))
+                variation = (idx - ((len(learning_rates)+1)/2))/(len(learning_rates)*1.6)
+                #if technique == "template_adj": technique_printable = "Template-based" ; color = (0.6,0,0) ; marker = "^" ; variation = -0.15
+                #if technique == "template_sto": technique_printable = "Stochastic TB" ; color = (1.0,0.5,0.1) ; marker = "v" ; variation = -0.05
+                #if technique == "spectral": technique_printable = "Spectral" ; color = "g" ; marker = "o" ; variation = 0.05
+                #if technique == "modularity": technique_printable = "Modularity" ; color = "b" ; marker = "D" ; variation = 0.15
+
+                measure_list = [results_dict[graph_name][cluster_size][technique][measure] for cluster_size in cluster_sizes]
+
+                plt.errorbar(x=np.array(range(len(cluster_sizes))) + variation,
+                             y=np.mean(measure_list, axis=1),
+                             yerr=np.std(measure_list, axis=1),
+                             markersize=6, marker=".", color=color, capsize=2,
+                             label=technique_printable)
+
+            plt.xticks(range(len(cluster_sizes)), labels=cluster_sizes)
+            plt.ylabel(measure_print)
+            plt.xlabel("Cluster size")
+            plt.legend()
+            plt.grid(b=True, axis="both", which="major")
+
+            plt.tight_layout()
+            plt.savefig("alpha_{}_{}.eps".format(graph_name, measure))
+            #plt.show()
+
 
 def plot_progression_results():
 
@@ -278,7 +338,8 @@ def plot_real_noisy():
         plt.savefig("noisy_pd.eps")
 
 if __name__ == '__main__':
-    plot_basic_results()
+    #plot_basic_results()
+    plot_alpha_results()
     #plot_bp_results()
     #plot_progression_results()
     #plot_real_noisy()
