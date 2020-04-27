@@ -11,7 +11,7 @@ def plot_basic_results():# Plotting basic results
     graph_names = ["C2","G3","G6"]
     measures = ["ari", "projector_distance", "time"]
     #techniques = ["template_adj", "template_lap", "spectral", "modularity"]
-    techniques = ["template_adj", "template_sto", "spectral", "modularity"]
+    techniques = ["template_adj", "template_sto", "template_stok", "spectral", "modularity"]
     cluster_sizes = ["5","10","20","40","80"]
 
     with open("basic_results.json") as fp:
@@ -40,8 +40,9 @@ def plot_basic_results():# Plotting basic results
                     continue
                 # Setting up printables name
                 if technique == "template_adj": technique_printable = "Template-based" ; color = (0.6,0,0) ; marker = "^" ; variation = -0.15
-                if technique == "template_sto": technique_printable = "Stochastic TB" ; color = (1.0,0.5,0.1) ; marker = "v" ; variation = -0.05
-                if technique == "spectral": technique_printable = "Spectral" ; color = "g" ; marker = "o" ; variation = 0.05
+                if technique == "template_sto": technique_printable = "Stochastic TB" ; color = (1.0,0.5,0.1) ; marker = "v" ; variation = -0.075
+                if technique == "template_stok": technique_printable = "STB + $k$-means" ; color = (0.8,0.3,0.1) ; marker = ">" ; variation = 0.00
+                if technique == "spectral": technique_printable = "Spectral" ; color = "g" ; marker = "o" ; variation = 0.075
                 if technique == "modularity": technique_printable = "Modularity" ; color = "b" ; marker = "D" ; variation = 0.15
 
                 measure_list = [results_dict[graph_name][cluster_size][technique][measure] for cluster_size in cluster_sizes]
@@ -338,8 +339,8 @@ def plot_real_noisy():
         plt.savefig("noisy_pd.eps")
 
 if __name__ == '__main__':
-    #plot_basic_results()
-    plot_alpha_results()
+    plot_basic_results()
+    #plot_alpha_results()
     #plot_bp_results()
     #plot_progression_results()
     #plot_real_noisy()
