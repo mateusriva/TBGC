@@ -79,7 +79,7 @@ def find_optimal_P(M, O, manifold_P, cost=compute_matching_norm, verbosity=0):
 
 def normalization_P(P_prime):
     """Projects a non-negative P_prime back to non-negative right-stochastic-like space by normalising each line."""
-    return P_prime / np.sum(P_prime, axis=0)
+    return (P_prime.T / np.sum(P_prime, axis=1)).T
 
 
 def projection_P(P_prime):
