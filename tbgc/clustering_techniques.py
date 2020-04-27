@@ -986,7 +986,9 @@ def cluster_stochastic(A_M, A_O, learning_rate=10e-5):
       time"""
     stochastic_start_time = time()
     P_opt_stochastic = find_optimal_P_stochastic(A_M, A_O, learning_rate=learning_rate)
-    stochastic_prediction = np.argmax(P_opt_stochastic, axis=1)
+    #stochastic_prediction = np.argmax(P_opt_stochastic, axis=1)
+    stochastic_kmeans = get_kmeans(P_opt_stochastic, A_M.shape[0])
+    stochastic_prediction = stochastic_kmeans.predict(P_opt_stochastic)
     stochastic_time = time() - stochastic_start_time
 
     return stochastic_prediction, P_opt_stochastic, stochastic_time
