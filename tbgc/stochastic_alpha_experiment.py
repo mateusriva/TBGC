@@ -42,5 +42,5 @@ if __name__ == '__main__':
 
             results[graph_name][c] = experiment_measures
 
-    with open("alpha_results.json", "w") as fp:
-        json.dump(results, fp, indent=2)
+            with open("alpha_results.json", "w") as fp:
+                json.dump(results, fp, indent=2)
