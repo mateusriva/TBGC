@@ -164,7 +164,7 @@ def school_label_process(item):
     else: return int(item)
 
 
-def load_school_dataset(which=1, cut=None):
+def load_school_dataset(which=1, cut=None, noise=0):
     """Loads the school face to face interaction dataset."""
     assert which in [1,2], "dataset must be 1 or 2"
     # school dataset is stored as gml data
@@ -178,6 +178,10 @@ def load_school_dataset(which=1, cut=None):
     dict_of_labels = dict(list_of_tuples)
 
     A_M, A_O, vertex_labels = process_loaded_graph(loaded_graph, dict_of_labels, cut)
+
+    # Adding noise
+    if noise > 0:
+        A_M = A_M + np.random.normal(0, noise, A_M.shape)
 
     return None, A_M, None, None, A_O, None, vertex_labels
 
