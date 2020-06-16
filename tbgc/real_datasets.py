@@ -40,7 +40,7 @@ def load_email_dataset(cut=None, noise=0):
 
     # Adding noise
     if noise > 0:
-        A_M = A_M + np.random.normal(0, noise, A_M.shape)
+        A_M = (A_M + np.random.normal(0, noise, A_M.shape)).clip(min=0.0)
 
     return None, A_M, None, None, A_O, None, vertex_labels
 
@@ -181,7 +181,7 @@ def load_school_dataset(which=1, cut=None, noise=0):
 
     # Adding noise
     if noise > 0:
-        A_M = A_M + np.random.normal(0, noise, A_M.shape)
+        A_M = (A_M + np.random.normal(0, noise, A_M.shape)).clip(min=0.0)
 
     return None, A_M, None, None, A_O, None, vertex_labels
 
