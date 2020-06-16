@@ -57,25 +57,27 @@ def run_iteration(generator_function: Callable, generator_args: Sequence, cost_f
         cluster_template(A_M, A_O, mode="adjacency", cost_function=cost_function)
     # template_lap_prediction, P_opt_template_lap, template_lap_time = \
     #    cluster_template(A_M, A_O, mode="laplacian", cost_function=cost_function)
-    template_sto_prediction, P_opt_template_sto, template_sto_time = \
-        cluster_stochastic(A_M, A_O, learning_rate=10e-6)
-    template_stok_prediction, P_opt_template_stok, template_stok_time = \
-        cluster_stochastic_kmeans(A_M, A_O, learning_rate=10e-6)
+    #template_sto_prediction, P_opt_template_sto, template_sto_time = \
+    #    cluster_stochastic(A_M, A_O, learning_rate=10e-6)
+    #template_stok_prediction, P_opt_template_stok, template_stok_time = \
+    #    cluster_stochastic_kmeans(A_M, A_O, learning_rate=10e-6)
     spectral_prediction, P_opt_spectral, spectral_time = \
         cluster_spectral(A_M, A_O)
     modularity_prediction, _, modularity_time = \
         cluster_modularity(A_M, A_O)
+    modularity_louv_prediction, _, modularity_louv_time = \
+        cluster_modularity_louv(A_M, A_O)
 
     # Compute measures
-    measures = {"template_adj": {}, "template_lap": {}, "template_sto": {}, "template_stok": {}, "spectral": {}, "modularity": {}}
-    for method, prediction, features, times in zip(["template_adj", "template_sto", "template_stok", "spectral", "modularity"],
-                                                   [template_adj_prediction, template_sto_prediction,  template_stok_prediction,  spectral_prediction, modularity_prediction],
-                                                   [P_opt_template_adj, P_opt_template_sto, P_opt_template_stok, P_opt_spectral, None],
-                                                   [template_adj_time, template_sto_time, template_stok_time, spectral_time, modularity_time]):
+    measures = {"template_adj": {}, "spectral": {}, "modularity": {}, "modularity_louv": {}}
+    for method, prediction, features, times in zip(["template_adj", "spectral", "modularity", "modularity_louv"],
+                                                   [template_adj_prediction, spectral_prediction, modularity_prediction, modularity_louv],
+                                                   [P_opt_template_adj, P_opt_spectral, None, None],
+                                                   [template_adj_time, spectral_time, modularity_time, modularity_louv]):
         # Adjusted Rand Index
         measures[method]["ari"] = adjusted_rand_score(vertex_labels, prediction)
         # Distance to gt projector
-        if method != "modularity":
+        if method != "modularity" and method != "modularity_louv":
             measures[method]["projector_distance"] = np.linalg.norm(
                 np.matmul(P_gt, P_gt.T) - np.matmul(features, features.T))
         else:
