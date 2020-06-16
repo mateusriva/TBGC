@@ -5,7 +5,7 @@ from multiprocessing import Pool
 from tqdm import tqdm
 
 from clustering_techniques import compute_matching_norm
-from experiment_utils import run_iteration, run_louvain_iteration
+from experiment_utils import run_iteration
 from toy_datasets import generate_G3, generate_G6, generate_C2, generate_bp
 
 

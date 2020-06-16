@@ -5,13 +5,13 @@ from multiprocessing import Pool
 from tqdm import tqdm
 
 from clustering_techniques import compute_matching_norm
-from experiment_utils import run_iteration, run_louvain_iteration
+from experiment_utils import run_iteration
 from toy_datasets import generate_G3, generate_G6, generate_C2, generate_bp
 
 
 def pooled_iteration_function(iteration):
     """Used for the multiprocessing Pool of run_iterations."""
-    return run_louvain_iteration(generate_C2, (c, intra_cluster_prob, inter_cluster_prob), random_state=iteration)
+    return run_iteration(generate_C2, (c, intra_cluster_prob, inter_cluster_prob), random_state=iteration)
 
 if __name__ == '__main__':
     # Experiment parameters
