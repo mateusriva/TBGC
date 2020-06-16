@@ -19,6 +19,7 @@ from pymanopt import Problem
 from pymanopt.solvers import SteepestDescent, ConjugateGradient
 
 import networkx as nx
+import sknetwork as skn
 
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils import check_random_state, as_float_array, check_symmetric
@@ -1026,3 +1027,12 @@ def cluster_modularity(A_M, A_O):
     modularity_time = time() - modularity_start_time
 
     return modularity_prediction, None, modularity_time
+
+
+def cluster_modularity_louvain(A_M, A_O):
+    A_O = np.array(A_O)
+    modularity_louv_start_time = time()
+    modularity_louv_prediction = skn.clustering.Louvain(modularity="newman").fit_transform(A_O)
+    modularity_louv_time = time() - modularity_louv_start_time
+
+    return modularity_louv_prediction, None, modularity_louv_time
