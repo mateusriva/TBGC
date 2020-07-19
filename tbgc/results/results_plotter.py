@@ -47,7 +47,7 @@ def plot_basic_results():# Plotting basic results
                 #if technique == "template_stok": technique_printable = "STB + $k$-means" ; color = (0.8,0.3,0.1) ; marker = ">" ; variation = 0.00
                 if technique == "spectral": technique_printable = "Spectral" ; color = "g" ; marker = "o" ; variation = -0.075
                 if technique == "modularity": technique_printable = "CNM Modularity" ; color = "b" ; marker = "D" ; variation = 0.075
-                if technique == "modularity_louv": technique_printable = "Louvain" ; color = (0.0,0.0,0.4) ; marker = "*" ; variation = 0.15
+                if technique == "modularity_louv": technique_printable = "Louvain" ; color = (0.6,0.0,0.6) ; marker = "*" ; variation = 0.15
 
                 measure_list = [results_dict[graph_name][cluster_size][technique][measure] for cluster_size in cluster_sizes]
 
@@ -157,7 +157,7 @@ def plot_progression_results():
                 #if technique == "template_stok": technique_printable = "STB + $k$-means" ; color = (0.8,0.3,0.1) ; marker = ">" ; variation = 0.00
                 if technique == "spectral": technique_printable = "Spectral" ; color = "g" ; marker = "o" ; variation = -0.075
                 if technique == "modularity": technique_printable = "CNM Modularity" ; color = "b" ; marker = "D" ; variation = 0.075
-                if technique == "modularity_louv": technique_printable = "Louvain" ; color = (0.0,0.0,0.4) ; marker = "*" ; variation = 0.15
+                if technique == "modularity_louv": technique_printable = "Louvain" ; color = (0.6,0.0,0.6) ; marker = "*" ; variation = 0.15
 
                 measure_list = [results_dict[cluster_size][icp][technique][measure] for icp in
                                 intra_cluster_probabilities]
@@ -219,7 +219,7 @@ def plot_bp_results():
                     if technique == "spectral": technique_printable = "Spectral"; color = "g"; marker = "o"; variation = -0.075
                     if technique == "modularity": technique_printable = "CNM Modularity"; color = "b"; marker = "D"; variation = 0.075
                     if technique == "modularity_louv": technique_printable = "Louvain"; color = (
-                    0.0, 0.0, 0.4); marker = "*"; variation = 0.15
+                    0.6, 0.0, 0.6); marker = "*"; variation = 0.15
 
                     measure_list = [results_dict[graph_name][cluster_size][icp][technique][measure] for icp in
                                     inter_cluster_probabilities]
@@ -237,15 +237,15 @@ def plot_bp_results():
                 plt.grid(b=True, axis="both", which="major")
 
                 plt.tight_layout()
-                plt.show()
-                #plt.savefig("bipartite_{}_{}_{}.eps".format(graph_name, cluster_size, measure))
+                #plt.show()
+                plt.savefig("bipartite_{}_{}_{}.eps".format(graph_name, cluster_size, measure))
 
 
 def print_real():
     measures = ["ari", "projector_distance", "time"]
-    techniques = ["template_adj", "spectral", "modularity"]
-    technique_printables = ["TB", "Spectral", "Modularity"]
-    graphs = ["school1", "school1"]
+    techniques = ["template_adj", "spectral", "modularity", "modularity_louv"]
+    technique_printables = ["TB", "Spectral", "CNM Modularity", "Louvain"]
+    graphs = ["email", "school1", "school2"]
 
     with open("real_results_noisy.json") as fp:
         results_dict = json.load(fp)
@@ -263,19 +263,19 @@ def print_real():
             print(measure_print, end="")
 
             for technique in techniques:
-                if technique == "modularity" and measure == "projector_distance":
+                if (technique == "modularity" or technique == "modularity_louv") and measure == "projector_distance":
                     print(" & N/A", end="")
                     continue
                 measure_list = results_dict[graph]["0"][technique][measure]
-                print(" & ${:.04f} \\pm {:.04f}$".format(np.mean(measure_list), np.std(measure_list)), end="")
+                print(" & ${:.2f} \\pm {:.2f}$".format(np.mean(measure_list), np.std(measure_list)), end="")
             print("\\\\")
 
 def plot_real_noisy():
     measures = ["ari", "projector_distance"]
     techniques = ["template_adj"]
     technique_printables = ["Template-based"]
-    graphs = ["school1"]
-    noises=["0","1","2","5","10","20","30","40","60","80","100"]
+    graphs = ["email"]
+    noises=["0","1","2","5","10","20","30",]
 
     with open("real_results_noisy.json") as fp:
         results_dict = json.load(fp)
@@ -287,19 +287,22 @@ def plot_real_noisy():
         plt.title("ARI - Noisy Model")
 
         # Plotting baseline spectral line
-        spectral_mean = np.mean([results_dict["school1"][noise]["spectral"]["ari"] for noise in noises])
-        spectral_std = np.std([results_dict["school1"][noise]["spectral"]["ari"] for noise in noises])
+        spectral_mean = np.mean([results_dict["email"][noise]["spectral"]["ari"] for noise in noises])
+        spectral_std = np.std([results_dict["email"][noise]["spectral"]["ari"] for noise in noises])
         plt.hlines(spectral_mean, xmin=0, xmax=len(noises) - 1, color="g", linestyle="--", label="Spectral")
         # plt.fill_between(range(len(noises)), [spectral_mean + spectral_std] * len(noises),
         #                 [spectral_mean - spectral_std] * len(noises), color=(0, 1, 0, 0.3))
         # Plotting baseline modularity line
-        modularity_mean = np.mean([results_dict["school1"][noise]["modularity"]["ari"] for noise in noises])
-        modularity_std = np.std([results_dict["school1"][noise]["modularity"]["ari"] for noise in noises])
-        plt.hlines(modularity_mean, xmin=0, xmax=len(noises) - 1, color="b", label="Modularity", linestyle="--")
+        modularity_mean = np.mean([results_dict["email"][noise]["modularity"]["ari"] for noise in noises])
+        modularity_std = np.std([results_dict["email"][noise]["modularity"]["ari"] for noise in noises])
+        plt.hlines(modularity_mean, xmin=0, xmax=len(noises) - 1, color="b", label="CNM Modularity", linestyle="--")
+        modularity_louv_mean = np.mean([results_dict["email"][noise]["modularity_louv"]["ari"] for noise in noises])
+        modularity_louv_std = np.std([results_dict["email"][noise]["modularity_louv"]["ari"] for noise in noises])
+        plt.hlines(modularity_louv_mean, xmin=0, xmax=len(noises) - 1, color=(0.6,0,0.6), label="Louvain", linestyle="--")
         # plt.fill_between(range(len(noises)), [modularity_mean+modularity_std]*len(noises), [modularity_mean-modularity_std]*len(noises), color=(0,1,0,0.3))
 
         # Plotting the ARI
-        measure_list = [results_dict["school1"][noise]["template_adj"]["ari"] for noise in noises]
+        measure_list = [results_dict["email"][noise]["template_adj"]["ari"] for noise in noises]
         plt.errorbar(x=np.array(range(len(noises))),
                      y=np.mean(measure_list, axis=1),
                      yerr=np.std(measure_list, axis=1),
@@ -314,26 +317,26 @@ def plot_real_noisy():
         plt.grid(b=True, axis="both", which="major")
 
         plt.tight_layout()
-        plt.savefig("real_school1_noisy_ari.eps")
+        plt.savefig("email_noisy_ari.eps")
         # Projector Distance
         plt.figure(figsize=(10, 4))
         plt.rcParams.update({'font.size': 18})
         plt.title("Projector Distance - Noisy Model")
 
         # Plotting baseline spectral line
-        spectral_mean = np.mean([results_dict["school1"][noise]["spectral"]["projector_distance"] for noise in noises])
-        spectral_std = np.std([results_dict["school1"][noise]["spectral"]["projector_distance"] for noise in noises])
+        spectral_mean = np.mean([results_dict["email"][noise]["spectral"]["projector_distance"] for noise in noises])
+        spectral_std = np.std([results_dict["email"][noise]["spectral"]["projector_distance"] for noise in noises])
         plt.hlines(spectral_mean, xmin=0, xmax=len(noises) - 1, color="g", linestyle="--", label="Spectral")
         # plt.fill_between(range(len(noises)), [spectral_mean + spectral_std] * len(noises),
         #                 [spectral_mean - spectral_std] * len(noises), color=(0, 1, 0, 0.3))
         # Plotting baseline modularity line
-        #modularity_mean = np.mean([results_dict["school1"][noise]["modularity"]["projector_distance"] for noise in noises])
-        #modularity_std = np.std([results_dict["school1"][noise]["modularity"]["projector_distance"] for noise in noises])
+        #modularity_mean = np.mean([results_dict["email"][noise]["modularity"]["projector_distance"] for noise in noises])
+        #modularity_std = np.std([results_dict["email"][noise]["modularity"]["projector_distance"] for noise in noises])
         #plt.hlines(modularity_mean, xmin=0, xmax=len(noises) - 1, color="b", label="Modularity")
         # plt.fill_between(range(len(noises)), [modularity_mean+modularity_std]*len(noises), [modularity_mean-modularity_std]*len(noises), color=(0,1,0,0.3))
 
         # Plotting the Projector Distance
-        measure_list = [results_dict["school1"][noise]["template_adj"]["projector_distance"] for noise in noises]
+        measure_list = [results_dict["email"][noise]["template_adj"]["projector_distance"] for noise in noises]
         plt.errorbar(x=np.array(range(len(noises))),
                      y=np.mean(measure_list, axis=1),
                      yerr=np.std(measure_list, axis=1),
@@ -348,13 +351,13 @@ def plot_real_noisy():
         plt.grid(b=True, axis="both", which="major")
 
         plt.tight_layout()
-        plt.savefig("real_school1_noisy_pd.eps")
+        plt.savefig("email_noisy_pd.eps")
 
 if __name__ == '__main__':
-    #plot_real_noisy()
+    plot_real_noisy()
     #print_real()
     #plot_alpha_results()
-    plot_bp_results()
+    #plot_bp_results()
     #plot_basic_results()
     #plot_progression_results()
     #plot_real_noisy()
